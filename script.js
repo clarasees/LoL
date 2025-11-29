@@ -32,6 +32,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const yellowImageUpload = document.getElementById('yellowImageUpload');
     const yellowGallery = document.getElementById('yellowGallery');
 
+    // Combined output
+    const combinedCanvas = document.getElementById('combinedCanvas');
+    const combinedCtx = combinedCanvas.getContext('2d');
+
     // Common elements
     const cameraSelect = document.getElementById('cameraSelect');
     const startBtn = document.getElementById('startBtn');
@@ -401,6 +405,41 @@ document.addEventListener('DOMContentLoaded', function() {
         yellowCtx.putImageData(yellowImageData, 0, 0);
         yellowMaskedCtx.putImageData(yellowMaskedImageData, 0, 0);
 
+        // Create combined output - merge all three masked outputs
+        const combinedImageData = combinedCtx.createImageData(combinedCanvas.width, combinedCanvas.height);
+        const combinedData = combinedImageData.data;
+
+        for (let i = 0; i < combinedData.length; i += 4) {
+            // Start with black/transparent
+            let r = 0, g = 0, b = 0, a = 255;
+
+            // Check blue masked output
+            if (blueMaskedData[i] !== 0 || blueMaskedData[i + 1] !== 0 || blueMaskedData[i + 2] !== 0) {
+                r = blueMaskedData[i];
+                g = blueMaskedData[i + 1];
+                b = blueMaskedData[i + 2];
+            }
+            // Check red masked output (overlays on top if present)
+            else if (redMaskedData[i] !== 0 || redMaskedData[i + 1] !== 0 || redMaskedData[i + 2] !== 0) {
+                r = redMaskedData[i];
+                g = redMaskedData[i + 1];
+                b = redMaskedData[i + 2];
+            }
+            // Check yellow masked output (overlays on top if present)
+            else if (yellowMaskedData[i] !== 0 || yellowMaskedData[i + 1] !== 0 || yellowMaskedData[i + 2] !== 0) {
+                r = yellowMaskedData[i];
+                g = yellowMaskedData[i + 1];
+                b = yellowMaskedData[i + 2];
+            }
+
+            combinedData[i] = r;
+            combinedData[i + 1] = g;
+            combinedData[i + 2] = b;
+            combinedData[i + 3] = a;
+        }
+
+        combinedCtx.putImageData(combinedImageData, 0, 0);
+
         // Continue processing frames
         animationId = requestAnimationFrame(processFrame);
     }
@@ -416,12 +455,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Request access to the selected webcam
+            // Request access to the selected webcam (portrait mode)
             stream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     deviceId: { exact: selectedDeviceId },
-                    width: 640,
-                    height: 480
+                    width: 480,
+                    height: 640
                 },
                 audio: false
             });
@@ -446,6 +485,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 yellowCanvas.height = video.videoHeight;
                 yellowMaskedCanvas.width = video.videoWidth;
                 yellowMaskedCanvas.height = video.videoHeight;
+
+                combinedCanvas.width = video.videoWidth;
+                combinedCanvas.height = video.videoHeight;
 
                 // Start processing frames
                 processFrame();
@@ -486,6 +528,7 @@ document.addEventListener('DOMContentLoaded', function() {
             redMaskedCtx.clearRect(0, 0, redMaskedCanvas.width, redMaskedCanvas.height);
             yellowCtx.clearRect(0, 0, yellowCanvas.width, yellowCanvas.height);
             yellowMaskedCtx.clearRect(0, 0, yellowMaskedCanvas.width, yellowMaskedCanvas.height);
+            combinedCtx.clearRect(0, 0, combinedCanvas.width, combinedCanvas.height);
 
             // Update UI
             startBtn.disabled = false;
