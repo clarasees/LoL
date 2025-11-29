@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Web App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Welcome</h1>
+        </header>
+
+        <main>
+            <h2>Chroma Key Effect</h2>
+
+            <div class="layout-container">
+                <!-- Left Column: Controls -->
+                <div class="left-column">
+                    <div class="controls">
+                        <label for="cameraSelect">Select Camera:</label>
+                        <select id="cameraSelect">
+                            <option value="">Loading cameras...</option>
+                        </select>
+                    </div>
+
+                    <div class="controls">
+                        <button id="startBtn">Start Webcam</button>
+                        <button id="stopBtn" disabled>Stop Webcam</button>
+                    </div>
+
+                    <h3>Blue Backgrounds</h3>
+                    <div class="gallery-container">
+                        <input type="file" id="blueImageUpload" accept="image/*" multiple>
+                        <div id="blueGallery" class="gallery"></div>
+                    </div>
+
+                    <div class="slider-container">
+                        <label for="blueSensitivity">Blue Sensitivity:</label>
+                        <input type="range" id="blueSensitivity" min="0" max="100" value="50">
+                        <span id="blueSensitivityValue">50</span>
+                    </div>
+
+                    <h3>Red Backgrounds</h3>
+                    <div class="gallery-container">
+                        <input type="file" id="redImageUpload" accept="image/*" multiple>
+                        <div id="redGallery" class="gallery"></div>
+                    </div>
+
+                    <div class="slider-container">
+                        <label for="redSensitivity">Red Sensitivity:</label>
+                        <input type="range" id="redSensitivity" min="0" max="100" value="50">
+                        <span id="redSensitivityValue">50</span>
+                    </div>
+
+                    <h3>Yellow Backgrounds</h3>
+                    <div class="gallery-container">
+                        <input type="file" id="yellowImageUpload" accept="image/*" multiple>
+                        <div id="yellowGallery" class="gallery"></div>
+                    </div>
+
+                    <div class="slider-container">
+                        <label for="yellowSensitivity">Yellow Sensitivity:</label>
+                        <input type="range" id="yellowSensitivity" min="0" max="100" value="50">
+                        <span id="yellowSensitivityValue">50</span>
+                    </div>
+
+                    <p id="message"></p>
+                </div>
+
+                <!-- Right Column: Displays -->
+                <div class="right-column">
+                    <div class="canvas-row">
+                        <div class="canvas-wrapper">
+                            <h3>Blue Detection</h3>
+                            <canvas id="blueCanvas"></canvas>
+                        </div>
+                        <div class="canvas-wrapper">
+                            <h3>Blue Masked</h3>
+                            <canvas id="blueMaskedCanvas"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="canvas-row">
+                        <div class="canvas-wrapper">
+                            <h3>Red Detection</h3>
+                            <canvas id="redCanvas"></canvas>
+                        </div>
+                        <div class="canvas-wrapper">
+                            <h3>Red Masked</h3>
+                            <canvas id="redMaskedCanvas"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="canvas-row">
+                        <div class="canvas-wrapper">
+                            <h3>Yellow Detection</h3>
+                            <canvas id="yellowCanvas"></canvas>
+                        </div>
+                        <div class="canvas-wrapper">
+                            <h3>Yellow Masked</h3>
+                            <canvas id="yellowMaskedCanvas"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <video id="webcam" autoplay playsinline style="display: none;"></video>
+        </main>
+
+        <footer>
+            <p>&copy; 2025</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
