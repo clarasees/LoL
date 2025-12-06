@@ -9,8 +9,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const blueMaskedCtx = blueMaskedCanvas.getContext('2d');
     const blueSensitivitySlider = document.getElementById('blueSensitivity');
     const blueSensitivityValue = document.getElementById('blueSensitivityValue');
-    const blueImageUpload = document.getElementById('blueImageUpload');
-    const blueGallery = document.getElementById('blueGallery');
 
     // Red elements
     const redCanvas = document.getElementById('redCanvas');
@@ -19,8 +17,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const redMaskedCtx = redMaskedCanvas.getContext('2d');
     const redSensitivitySlider = document.getElementById('redSensitivity');
     const redSensitivityValue = document.getElementById('redSensitivityValue');
-    const redImageUpload = document.getElementById('redImageUpload');
-    const redGallery = document.getElementById('redGallery');
 
     // Yellow elements
     const yellowCanvas = document.getElementById('yellowCanvas');
@@ -29,8 +25,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const yellowMaskedCtx = yellowMaskedCanvas.getContext('2d');
     const yellowSensitivitySlider = document.getElementById('yellowSensitivity');
     const yellowSensitivityValue = document.getElementById('yellowSensitivityValue');
-    const yellowImageUpload = document.getElementById('yellowImageUpload');
-    const yellowGallery = document.getElementById('yellowGallery');
 
     // Combined output
     const combinedCanvas = document.getElementById('combinedCanvas');
@@ -48,13 +42,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let redSensitivity = 50;
     let yellowSensitivity = 50;
 
-    // Gallery state - arrays of images
-    let blueImages = [];
-    let redImages = [];
-    let yellowImages = [];
-    let blueActiveIndex = -1;
-    let redActiveIndex = -1;
-    let yellowActiveIndex = -1;
+    // Background images for each color
+    let blueBackgroundImage = null;
+    let redBackgroundImage = null;
+    let yellowBackgroundImage = null;
 
     // Enumerate available cameras
     async function getCameras() {
@@ -105,136 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
         yellowSensitivityValue.textContent = yellowSensitivity;
     });
 
-    // Helper function to add images to gallery
-    function addImagesToGallery(files, images, gallery, activeIndexRef, colorName) {
-        Array.from(files).forEach(file => {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const img = new Image();
-                img.onload = function() {
-                    const index = images.length;
-                    images.push(img);
-
-                    // Create thumbnail
-                    const item = document.createElement('div');
-                    item.className = 'gallery-item';
-                    item.dataset.index = index;
-
-                    const thumbnail = document.createElement('img');
-                    thumbnail.src = event.target.result;
-
-                    const removeBtn = document.createElement('button');
-                    removeBtn.className = 'remove-btn';
-                    removeBtn.textContent = '×';
-                    removeBtn.onclick = function(e) {
-                        e.stopPropagation();
-                        removeImage(index, images, gallery, activeIndexRef, colorName);
-                    };
-
-                    item.appendChild(thumbnail);
-                    item.appendChild(removeBtn);
-
-                    item.onclick = function() {
-                        selectImage(index, images, gallery, activeIndexRef, colorName);
-                    };
-
-                    gallery.appendChild(item);
-
-                    // Auto-select first image
-                    if (images.length === 1) {
-                        selectImage(0, images, gallery, activeIndexRef, colorName);
-                    }
-                };
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
-    }
-
-    // Helper function to select an image
-    function selectImage(index, images, gallery, activeIndexRef, colorName) {
-        // Update active index based on color
-        if (colorName === 'blue') blueActiveIndex = index;
-        else if (colorName === 'red') redActiveIndex = index;
-        else if (colorName === 'yellow') yellowActiveIndex = index;
-
-        // Update visual selection
-        const items = gallery.querySelectorAll('.gallery-item');
-        items.forEach((item, i) => {
-            item.classList.toggle('active', i === index);
-        });
-
-        message.textContent = `${colorName.charAt(0).toUpperCase() + colorName.slice(1)} image ${index + 1} selected`;
-        message.style.color = '#28a745';
-    }
-
-    // Helper function to remove an image
-    function removeImage(index, images, gallery, activeIndexRef, colorName) {
-        images.splice(index, 1);
-
-        // Rebuild gallery
-        gallery.innerHTML = '';
-        images.forEach((img, i) => {
-            const item = document.createElement('div');
-            item.className = 'gallery-item';
-            item.dataset.index = i;
-
-            const thumbnail = document.createElement('img');
-            thumbnail.src = img.src;
-
-            const removeBtn = document.createElement('button');
-            removeBtn.className = 'remove-btn';
-            removeBtn.textContent = '×';
-            removeBtn.onclick = function(e) {
-                e.stopPropagation();
-                removeImage(i, images, gallery, activeIndexRef, colorName);
-            };
-
-            item.appendChild(thumbnail);
-            item.appendChild(removeBtn);
-
-            item.onclick = function() {
-                selectImage(i, images, gallery, activeIndexRef, colorName);
-            };
-
-            gallery.appendChild(item);
-        });
-
-        // Update active index
-        if (colorName === 'blue') {
-            blueActiveIndex = blueActiveIndex >= images.length ? images.length - 1 : blueActiveIndex;
-            if (blueActiveIndex >= 0) selectImage(blueActiveIndex, images, gallery, activeIndexRef, colorName);
-        } else if (colorName === 'red') {
-            redActiveIndex = redActiveIndex >= images.length ? images.length - 1 : redActiveIndex;
-            if (redActiveIndex >= 0) selectImage(redActiveIndex, images, gallery, activeIndexRef, colorName);
-        } else if (colorName === 'yellow') {
-            yellowActiveIndex = yellowActiveIndex >= images.length ? images.length - 1 : yellowActiveIndex;
-            if (yellowActiveIndex >= 0) selectImage(yellowActiveIndex, images, gallery, activeIndexRef, colorName);
-        }
-    }
-
-    // Handle blue image upload
-    blueImageUpload.addEventListener('change', function(e) {
-        if (e.target.files.length > 0) {
-            addImagesToGallery(e.target.files, blueImages, blueGallery, blueActiveIndex, 'blue');
-        }
-    });
-
-    // Handle red image upload
-    redImageUpload.addEventListener('change', function(e) {
-        if (e.target.files.length > 0) {
-            addImagesToGallery(e.target.files, redImages, redGallery, redActiveIndex, 'red');
-        }
-    });
-
-    // Handle yellow image upload
-    yellowImageUpload.addEventListener('change', function(e) {
-        if (e.target.files.length > 0) {
-            addImagesToGallery(e.target.files, yellowImages, yellowGallery, yellowActiveIndex, 'yellow');
-        }
-    });
-
-    // Helper function to draw image with aspect ratio preserved (cover mode)
+    // Helper function to draw image with cover mode (preserves aspect ratio)
     function drawImageCover(ctx, img, canvasWidth, canvasHeight) {
         const imgAspect = img.width / img.height;
         const canvasAspect = canvasWidth / canvasHeight;
@@ -258,7 +120,46 @@ document.addEventListener('DOMContentLoaded', function() {
         ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
     }
 
-    // Process video frames to detect colors and apply masks
+    // Load predefined background images from backend
+    function loadBackgroundImages() {
+        // Load blue background
+        const blueImg = new Image();
+        blueImg.onload = function() {
+            blueBackgroundImage = blueImg;
+            console.log('Blue background loaded');
+        };
+        blueImg.onerror = function() {
+            console.log('Blue background not found (blue-background.jpg)');
+        };
+        blueImg.src = 'blue-background.jpg';
+
+        // Load red background
+        const redImg = new Image();
+        redImg.onload = function() {
+            redBackgroundImage = redImg;
+            console.log('Red background loaded');
+        };
+        redImg.onerror = function() {
+            console.log('Red background not found (red-background.jpg)');
+        };
+        redImg.src = 'red-background.jpg';
+
+        // Load yellow background
+        const yellowImg = new Image();
+        yellowImg.onload = function() {
+            yellowBackgroundImage = yellowImg;
+            console.log('Yellow background loaded');
+        };
+        yellowImg.onerror = function() {
+            console.log('Yellow background not found (yellow-background.jpg)');
+        };
+        yellowImg.src = 'yellow-background.jpg';
+    }
+
+    // Load background images on page load
+    loadBackgroundImages();
+
+    // Process video frames to detect colors
     function processFrame() {
         if (!stream) return;
 
@@ -275,44 +176,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const blueData = blueImageData.data;
         const redData = redImageData.data;
         const yellowData = yellowImageData.data;
-
-        // Create image data for masked canvases
-        const blueMaskedImageData = blueCtx.createImageData(blueCanvas.width, blueCanvas.height);
-        const redMaskedImageData = redCtx.createImageData(redCanvas.width, redCanvas.height);
-        const yellowMaskedImageData = yellowCtx.createImageData(yellowCanvas.width, yellowCanvas.height);
-
-        const blueMaskedData = blueMaskedImageData.data;
-        const redMaskedData = redMaskedImageData.data;
-        const yellowMaskedData = yellowMaskedImageData.data;
-
-        // Get currently selected images from galleries
-        const blueUploadedImage = blueActiveIndex >= 0 ? blueImages[blueActiveIndex] : null;
-        const redUploadedImage = redActiveIndex >= 0 ? redImages[redActiveIndex] : null;
-        const yellowUploadedImage = yellowActiveIndex >= 0 ? yellowImages[yellowActiveIndex] : null;
-
-        // Draw uploaded images to masked canvases with aspect ratio preserved
-        if (blueUploadedImage) {
-            drawImageCover(blueMaskedCtx, blueUploadedImage, blueMaskedCanvas.width, blueMaskedCanvas.height);
-        }
-        if (redUploadedImage) {
-            drawImageCover(redMaskedCtx, redUploadedImage, redMaskedCanvas.width, redMaskedCanvas.height);
-        }
-        if (yellowUploadedImage) {
-            drawImageCover(yellowMaskedCtx, yellowUploadedImage, yellowMaskedCanvas.width, yellowMaskedCanvas.height);
-        }
-
-        // Get background image data
-        const blueBackgroundData = blueUploadedImage
-            ? blueMaskedCtx.getImageData(0, 0, blueMaskedCanvas.width, blueMaskedCanvas.height)
-            : blueMaskedCtx.createImageData(blueMaskedCanvas.width, blueMaskedCanvas.height);
-
-        const redBackgroundData = redUploadedImage
-            ? redMaskedCtx.getImageData(0, 0, redMaskedCanvas.width, redMaskedCanvas.height)
-            : redMaskedCtx.createImageData(redMaskedCanvas.width, redMaskedCanvas.height);
-
-        const yellowBackgroundData = yellowUploadedImage
-            ? yellowMaskedCtx.getImageData(0, 0, yellowMaskedCanvas.width, yellowMaskedCanvas.height)
-            : yellowMaskedCtx.createImageData(yellowMaskedCanvas.width, yellowMaskedCanvas.height);
 
         // Process each pixel
         for (let i = 0; i < blueData.length; i += 4) {
@@ -331,19 +194,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 blueData[i + 2] = 0;
             }
 
-            // For blue masked canvas - show background where blue is detected
-            if (isBlue && blueUploadedImage) {
-                blueMaskedData[i] = blueBackgroundData.data[i];
-                blueMaskedData[i + 1] = blueBackgroundData.data[i + 1];
-                blueMaskedData[i + 2] = blueBackgroundData.data[i + 2];
-                blueMaskedData[i + 3] = 255;
-            } else {
-                blueMaskedData[i] = 0;
-                blueMaskedData[i + 1] = 0;
-                blueMaskedData[i + 2] = 0;
-                blueMaskedData[i + 3] = 255;
-            }
-
             // RED DETECTION
             const redThreshold = redSensitivity / 2;
             const isRed = r > (g + redThreshold) && r > (b + redThreshold) && r > 100;
@@ -353,19 +203,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 redData[i] = 0;
                 redData[i + 1] = 0;
                 redData[i + 2] = 0;
-            }
-
-            // For red masked canvas - show background where red is detected
-            if (isRed && redUploadedImage) {
-                redMaskedData[i] = redBackgroundData.data[i];
-                redMaskedData[i + 1] = redBackgroundData.data[i + 1];
-                redMaskedData[i + 2] = redBackgroundData.data[i + 2];
-                redMaskedData[i + 3] = 255;
-            } else {
-                redMaskedData[i] = 0;
-                redMaskedData[i + 1] = 0;
-                redMaskedData[i + 2] = 0;
-                redMaskedData[i + 3] = 255;
             }
 
             // YELLOW DETECTION
@@ -382,60 +219,124 @@ document.addEventListener('DOMContentLoaded', function() {
                 yellowData[i + 1] = 0;
                 yellowData[i + 2] = 0;
             }
-
-            // For yellow masked canvas - show background where yellow is detected
-            if (isYellow && yellowUploadedImage) {
-                yellowMaskedData[i] = yellowBackgroundData.data[i];
-                yellowMaskedData[i + 1] = yellowBackgroundData.data[i + 1];
-                yellowMaskedData[i + 2] = yellowBackgroundData.data[i + 2];
-                yellowMaskedData[i + 3] = 255;
-            } else {
-                yellowMaskedData[i] = 0;
-                yellowMaskedData[i + 1] = 0;
-                yellowMaskedData[i + 2] = 0;
-                yellowMaskedData[i + 3] = 255;
-            }
         }
 
-        // Put processed image data back to all canvases
+        // Put processed image data back to detection canvases
         blueCtx.putImageData(blueImageData, 0, 0);
-        blueMaskedCtx.putImageData(blueMaskedImageData, 0, 0);
         redCtx.putImageData(redImageData, 0, 0);
-        redMaskedCtx.putImageData(redMaskedImageData, 0, 0);
         yellowCtx.putImageData(yellowImageData, 0, 0);
-        yellowMaskedCtx.putImageData(yellowMaskedImageData, 0, 0);
+
+        // Create masked outputs (apply backgrounds where color is detected)
+        // Blue masked output
+        if (blueBackgroundImage) {
+            blueMaskedCtx.clearRect(0, 0, blueMaskedCanvas.width, blueMaskedCanvas.height);
+            drawImageCover(blueMaskedCtx, blueBackgroundImage, blueMaskedCanvas.width, blueMaskedCanvas.height);
+            const blueMaskedImageData = blueMaskedCtx.getImageData(0, 0, blueMaskedCanvas.width, blueMaskedCanvas.height);
+            const blueMaskedData = blueMaskedImageData.data;
+
+            // Re-read the blue detection data
+            const blueDetectionData = blueCtx.getImageData(0, 0, blueCanvas.width, blueCanvas.height).data;
+
+            for (let i = 0; i < blueMaskedData.length; i += 4) {
+                const isBlueDetected = blueDetectionData[i] !== 0 || blueDetectionData[i + 1] !== 0 || blueDetectionData[i + 2] !== 0;
+                if (isBlueDetected) {
+                    // Keep the background image pixel
+                } else {
+                    // Use original video pixel
+                    blueMaskedData[i] = blueData[i];
+                    blueMaskedData[i + 1] = blueData[i + 1];
+                    blueMaskedData[i + 2] = blueData[i + 2];
+                }
+            }
+            blueMaskedCtx.putImageData(blueMaskedImageData, 0, 0);
+        }
+
+        // Red masked output
+        if (redBackgroundImage) {
+            redMaskedCtx.clearRect(0, 0, redMaskedCanvas.width, redMaskedCanvas.height);
+            drawImageCover(redMaskedCtx, redBackgroundImage, redMaskedCanvas.width, redMaskedCanvas.height);
+            const redMaskedImageData = redMaskedCtx.getImageData(0, 0, redMaskedCanvas.width, redMaskedCanvas.height);
+            const redMaskedData = redMaskedImageData.data;
+
+            const redDetectionData = redCtx.getImageData(0, 0, redCanvas.width, redCanvas.height).data;
+
+            for (let i = 0; i < redMaskedData.length; i += 4) {
+                const isRedDetected = redDetectionData[i] !== 0 || redDetectionData[i + 1] !== 0 || redDetectionData[i + 2] !== 0;
+                if (isRedDetected) {
+                    // Keep the background image pixel
+                } else {
+                    // Use original video pixel
+                    redMaskedData[i] = redData[i];
+                    redMaskedData[i + 1] = redData[i + 1];
+                    redMaskedData[i + 2] = redData[i + 2];
+                }
+            }
+            redMaskedCtx.putImageData(redMaskedImageData, 0, 0);
+        }
+
+        // Yellow masked output
+        if (yellowBackgroundImage) {
+            yellowMaskedCtx.clearRect(0, 0, yellowMaskedCanvas.width, yellowMaskedCanvas.height);
+            drawImageCover(yellowMaskedCtx, yellowBackgroundImage, yellowMaskedCanvas.width, yellowMaskedCanvas.height);
+            const yellowMaskedImageData = yellowMaskedCtx.getImageData(0, 0, yellowMaskedCanvas.width, yellowMaskedCanvas.height);
+            const yellowMaskedData = yellowMaskedImageData.data;
+
+            const yellowDetectionData = yellowCtx.getImageData(0, 0, yellowCanvas.width, yellowCanvas.height).data;
+
+            for (let i = 0; i < yellowMaskedData.length; i += 4) {
+                const isYellowDetected = yellowDetectionData[i] !== 0 || yellowDetectionData[i + 1] !== 0 || yellowDetectionData[i + 2] !== 0;
+                if (isYellowDetected) {
+                    // Keep the background image pixel
+                } else {
+                    // Use original video pixel
+                    yellowMaskedData[i] = yellowData[i];
+                    yellowMaskedData[i + 1] = yellowData[i + 1];
+                    yellowMaskedData[i + 2] = yellowData[i + 2];
+                }
+            }
+            yellowMaskedCtx.putImageData(yellowMaskedImageData, 0, 0);
+        }
 
         // Create combined output - merge all three masked outputs
-        const combinedImageData = combinedCtx.createImageData(combinedCanvas.width, combinedCanvas.height);
+        // First draw the original video frame to combined canvas
+        combinedCtx.drawImage(video, 0, 0, combinedCanvas.width, combinedCanvas.height);
+        const combinedImageData = combinedCtx.getImageData(0, 0, combinedCanvas.width, combinedCanvas.height);
         const combinedData = combinedImageData.data;
 
+        // Get masked data from each canvas (if available)
+        const blueMaskedData = blueBackgroundImage ?
+            blueMaskedCtx.getImageData(0, 0, blueMaskedCanvas.width, blueMaskedCanvas.height).data : null;
+        const redMaskedData = redBackgroundImage ?
+            redMaskedCtx.getImageData(0, 0, redMaskedCanvas.width, redMaskedCanvas.height).data : null;
+        const yellowMaskedData = yellowBackgroundImage ?
+            yellowMaskedCtx.getImageData(0, 0, yellowMaskedCanvas.width, yellowMaskedCanvas.height).data : null;
+
+        // Re-read detection data (after processing)
+        const blueDetectionData = blueCtx.getImageData(0, 0, blueCanvas.width, blueCanvas.height).data;
+        const redDetectionData = redCtx.getImageData(0, 0, redCanvas.width, redCanvas.height).data;
+        const yellowDetectionData = yellowCtx.getImageData(0, 0, yellowCanvas.width, yellowCanvas.height).data;
+
+        // Apply masked backgrounds where colors are detected
         for (let i = 0; i < combinedData.length; i += 4) {
-            // Start with black/transparent
-            let r = 0, g = 0, b = 0, a = 255;
+            // Check each color detection
+            const blueDetected = blueDetectionData[i] !== 0 || blueDetectionData[i + 1] !== 0 || blueDetectionData[i + 2] !== 0;
+            const redDetected = redDetectionData[i] !== 0 || redDetectionData[i + 1] !== 0 || redDetectionData[i + 2] !== 0;
+            const yellowDetected = yellowDetectionData[i] !== 0 || yellowDetectionData[i + 1] !== 0 || yellowDetectionData[i + 2] !== 0;
 
-            // Check blue masked output
-            if (blueMaskedData[i] !== 0 || blueMaskedData[i + 1] !== 0 || blueMaskedData[i + 2] !== 0) {
-                r = blueMaskedData[i];
-                g = blueMaskedData[i + 1];
-                b = blueMaskedData[i + 2];
+            // Apply masked backgrounds in priority order (blue > red > yellow)
+            if (blueDetected && blueMaskedData) {
+                combinedData[i] = blueMaskedData[i];
+                combinedData[i + 1] = blueMaskedData[i + 1];
+                combinedData[i + 2] = blueMaskedData[i + 2];
+            } else if (redDetected && redMaskedData) {
+                combinedData[i] = redMaskedData[i];
+                combinedData[i + 1] = redMaskedData[i + 1];
+                combinedData[i + 2] = redMaskedData[i + 2];
+            } else if (yellowDetected && yellowMaskedData) {
+                combinedData[i] = yellowMaskedData[i];
+                combinedData[i + 1] = yellowMaskedData[i + 1];
+                combinedData[i + 2] = yellowMaskedData[i + 2];
             }
-            // Check red masked output (overlays on top if present)
-            else if (redMaskedData[i] !== 0 || redMaskedData[i + 1] !== 0 || redMaskedData[i + 2] !== 0) {
-                r = redMaskedData[i];
-                g = redMaskedData[i + 1];
-                b = redMaskedData[i + 2];
-            }
-            // Check yellow masked output (overlays on top if present)
-            else if (yellowMaskedData[i] !== 0 || yellowMaskedData[i + 1] !== 0 || yellowMaskedData[i + 2] !== 0) {
-                r = yellowMaskedData[i];
-                g = yellowMaskedData[i + 1];
-                b = yellowMaskedData[i + 2];
-            }
-
-            combinedData[i] = r;
-            combinedData[i + 1] = g;
-            combinedData[i + 2] = b;
-            combinedData[i + 3] = a;
         }
 
         combinedCtx.putImageData(combinedImageData, 0, 0);
@@ -455,12 +356,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Request access to the selected webcam (portrait mode)
+            // Request access to the selected webcam (portrait mode - HD)
             stream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     deviceId: { exact: selectedDeviceId },
-                    width: 480,
-                    height: 640
+                    width: 1080,
+                    height: 1440
                 },
                 audio: false
             });
